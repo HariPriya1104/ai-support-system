@@ -13,9 +13,12 @@ import java.util.List;
 public class AiService {
     private final ChatLanguageModel model;
 
-    public AiService()
-    {
-        model = OpenAiChatModel.builder().apiKey("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").modelName("llama-3.1-8b-instant").baseUrl("https://api.groq.com/openai/v1").build();
+    public AiService() {
+        model = OpenAiChatModel.builder()
+                .apiKey(System.getenv("GROQ_API_KEY"))
+                .modelName("llama-3.1-8b-instant")
+                .baseUrl("https://api.groq.com/openai/v1")
+                .build();
     }
 
     public String generateReply(String Title, String description)
