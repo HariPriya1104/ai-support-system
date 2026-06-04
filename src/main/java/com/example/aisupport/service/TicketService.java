@@ -1,18 +1,21 @@
 package com.example.aisupport.service;
 
+import com.example.aisupport.ai.AiService;
 import com.example.aisupport.dto.TicketDTO;
 import com.example.aisupport.dto.TicketResponseDTO;
+import com.example.aisupport.dto.UserDTO;
 import com.example.aisupport.exception.TicketNotFoundException;
+import com.example.aisupport.kafka.TicketKafkaProducer;
 import com.example.aisupport.model.Ticket;
 import com.example.aisupport.model.User;
 import com.example.aisupport.repository.TicketRepository;
 import com.example.aisupport.repository.UserRepository;
-import org.hibernate.boot.model.process.internal.UserTypeResolution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 
@@ -23,7 +26,12 @@ public class TicketService {
     private TicketRepository ticketRepository;
     @Autowired
     private UserRepository userRepository;
-
+    @Autowired
+    private TicketKafkaProducer ticketKafkaProducer;
+    @Autowired
+    private RestTemplate restTemplate;
+    @Autowired
+    private AiService aiService;
     public String createTicket(Ticket ticket){
         ticketRepository.save(ticket);
         return "Ticket created successfully";
@@ -61,8 +69,18 @@ public class TicketService {
         dto.setDescription(ticket.getDescription());
         if(ticket.getUser() != null)
         {
-            dto.setAssignedUserName(ticket.getUser().getName());
-            dto.setAssignedUserEmail(ticket.getUser().getEmail());
+            try {
+                UserDTO user = restTemplate.getForObject("http://localhost:8082/users/" + ticket.getUser().getId(), UserDTO.class);
+                if(user != null)
+                {
+                    dto.setAssignedUserName(user.getName());
+                    dto.setAssignedUserEmail(user.getEmail());
+                }
+            }
+            catch (Exception e)
+            {
+                dto.setAssignedUserName("Unknown");
+            }
         }
         return dto;
     }
@@ -79,6 +97,10 @@ public class TicketService {
             User user = userRepository.findById(dto.getUserId()).orElseThrow(() -> new RuntimeException("user not found"));
             ticket.setUser(user);
         }
+        ticketKafkaProducer.sendMessage("test-topic","Ticket created : " + ticket.getTitle());
+
+        String aiReply = aiService.generateReply(dto.getTitle(),dto.getDescription());
+        System.out.println("AI Reply : " + aiReply);
         return ticketRepository.save(ticket);
     }
     public List<Ticket> getAllTickets(){
