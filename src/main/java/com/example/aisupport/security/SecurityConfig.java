@@ -1,6 +1,7 @@
 package com.example.aisupport.security;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -32,5 +33,12 @@ public class SecurityConfig {
                 .httpBasic(basic -> basic.disable())
                 .formLogin(form -> form.disable());
         return http.build();
+    }
+
+    @Bean
+    public FilterRegistrationBean<JwtFilter> jwtFilterRegistration(JwtFilter filter) {
+        FilterRegistrationBean<JwtFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 }
