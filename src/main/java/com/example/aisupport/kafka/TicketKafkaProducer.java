@@ -12,17 +12,22 @@ public class TicketKafkaProducer {
 
     private final KafkaProducer<String,String> producer;
 
-    public TicketKafkaProducer()
-    {
-        Properties properties = new Properties();
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-        this.producer = new KafkaProducer<>(properties);
+    public TicketKafkaProducer() {
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, "1000");
+        props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, "1000");
+        props.put(ProducerConfig.DELIVERY_TIMEOUT_MS_CONFIG, "2000");
+        this.producer = new KafkaProducer<>(props);
     }
-    public void sendMessage(String topic, String message)
-    {
-        producer.send(new ProducerRecord<>(topic,message));
-        System.out.println("Message send : " + message);
+    public void sendMessage(String topic, String message) {
+        try {
+            producer.send(new ProducerRecord<>(topic, message));
+            System.out.println("Message sent: " + message);
+        } catch (Exception e) {
+            System.out.println("Kafka unavailable, skipping: " + e.getMessage());
+        }
     }
 }
