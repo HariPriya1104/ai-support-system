@@ -5,13 +5,16 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
+import java.io.Serializable;
+
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @ToString
-public class Ticket {
+@Table(name = "ticket")
+public class Ticket implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -27,6 +30,8 @@ public class Ticket {
     public String priority;
 
     public String createdBy;
+
+    public String resolution;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

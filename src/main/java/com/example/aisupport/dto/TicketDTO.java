@@ -23,4 +23,6 @@ public class TicketDTO {
     private String description;
 
     private Integer userId;
+
+    private String resolution;
 }

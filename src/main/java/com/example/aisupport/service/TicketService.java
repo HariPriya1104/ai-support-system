@@ -11,6 +11,8 @@ import com.example.aisupport.model.User;
 import com.example.aisupport.repository.TicketRepository;
 import com.example.aisupport.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -84,6 +86,8 @@ public class TicketService {
         }
         return dto;
     }
+
+    @CacheEvict(value="tickets",allEntries = true)
     public Ticket saveTicket(TicketDTO dto)
     {
         Ticket ticket = new Ticket();
@@ -103,7 +107,9 @@ public class TicketService {
         System.out.println("AI Reply : " + aiReply);
         return ticketRepository.save(ticket);
     }
+    @Cacheable(value="tickets")
     public List<Ticket> getAllTickets(){
+        System.out.println("DB hit no redis data");
         return ticketRepository.findAll();
     }
 
@@ -118,7 +124,7 @@ public class TicketService {
         ticket.setStatus(dto.getStatus());
         ticket.setPriority(dto.getPriority());
         ticket.setCreatedBy(dto.getCreatedBy());
-
+        ticket.setResolution(dto.getResolution());
         ticketRepository.save(ticket);
         return "ticket updated successfully";
     }
