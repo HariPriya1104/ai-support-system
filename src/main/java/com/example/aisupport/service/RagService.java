@@ -26,16 +26,21 @@ public class RagService {
         this.ticketRepository = ticketRepository;
         this.embeddingModel = new AllMiniLmL6V2QuantizedEmbeddingModel();
         this.embeddingStore = PgVectorEmbeddingStore.builder()
-                .host("localhost")
+                .host(getEnvOrDefault("PGVECTOR_HOST", "localhost"))
                 .port(5432)
-                .database("studentdb")
-                .user("priya-22652")
-                .password("postgres")
+                .database(getEnvOrDefault("PGVECTOR_DB", "studentdb"))
+                .user(getEnvOrDefault("PGVECTOR_USER", "priya-22652"))
+                .password(getEnvOrDefault("PGVECTOR_PASSWORD", "postgres"))
                 .table("ticket_embeddings")
                 .dimension(384)
                 .build();
     }
 
+    private String getEnvOrDefault(String key, String defaultValue) {
+        String value = System.getenv(key);
+        return (value != null && !value.isBlank()) ? value : defaultValue;
+    }
+    
     public void loadTicketsIntoVectorStore(){
         embeddingStore.removeAll();
         ticketRepository.findAll().forEach(ticket -> {
